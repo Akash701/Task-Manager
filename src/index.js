@@ -1,77 +1,62 @@
 const express = require('express')
-const Task = require('./models/task')
-const User = require('./models/user')
+const userRouter = require('./Router/user')
+const taskRouter = require('./Router/task')
 require('./db/mongoose')
 
 
 const app = express()
+
 const port = process.env.PORT || 3000
 
-app.use(express.json())  // parse the json coming from postman
+// app.use((req,res,next)=>{
+// if(req.method ==="GET"){
+//  res.send('Get not available at the moment')
+// }
+// else{
+//  next()
+// }
+// })
 
-//Creating resourse//
-app.post('/users',(req,res)=>{
-    const user = new User(req.body)
-    console.log(req.body);
-    user.save().then(()=>{
-        res.status(201).send(user)
-        }).catch((error)=>{
-            res.status(400).send(error)
-        })
-})
+// app.use((req,res,next)=>{
+// if(req.method === "Get"||"POST"||"PATCH"||"DELETE"){
+//     res.status(503).send("Server at maintenance")
+// }
+// else{
+//     next()
+// }
+// })
 
-app.post('/task',(req,res)=>{
-  const task = new Task(req.body)
-  console.log(req.body);
-  task.save().then(()=>{//task
-    res.status(201).send(task)
-  }).catch((error)=>{
-        res.status(400).send(error)
-  })
-})
-//Creating resourse//
-app.get('/users',(req,res)=>{
-    User.find({}).then((user)=>{ //To fetch all the datas
-        res.send(user)
-    }).catch((error)=>{
-          res.status(500).send()
-    })
-})
+app.use(express.json())// parse the json coming from postman
+app.use(userRouter)
+app.use(taskRouter)
 
-app.get("/users/:id",(req,res)=>{
-     const _id = req.params.id
-     console.log(req.params);
-     User.findById(_id).then((user)=>{
-       if(!user){
-         return res.status(404).send('User not found')
-       }
-       res.send(user)
-     }).catch((error)=>{
-            res.status(500).send()
-     })
-})
+//bcrypt is used used for security ie: Hashing
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 
-app.get("/task",(req,res)=>{
-      Task.find({}).then((task)=>{
-          res.send(task)
-      }).catch((error)=>{
-            res.status(401).send(error)
-      })
-})
+const myFunction = async()=>{
+    const token = jwt.sign({_id:'abc123'},'thisismykey',{expiresIn:'7days'})
+    console.log(token);
 
-app.get("/task/:id",(req,res)=>{
-    const _id = req.params.id
-    Task.findById(_id).then((task)=>{
-        if(!task){
-          return res.status(404).send()
-        }
-            res.send(task)
-    }).catch((error)=>{
-          res.send(error)
-    })
-})
-
+    const data = jwt.verify(token,'thisismykey')
+    console.log(data);
+}
+// myFunction()
 
 app.listen(port,()=>{
     console.log('Server is running on '+ port);
 })
+const Task = require('./models/task')
+const User = require('./models/user')
+
+const main = async()=>{
+
+    // const task = await Task.findById('60f269c16d9cd90db5165db7')
+    // await task.populate('owner').execPopulate()
+    // console.log(task.owner);
+    const user = await User.findById('60f11d8f7784821f47f0508e')
+    await user.populate('tasks').execPopulate()
+    console.log(user.tasks);
+}
+
+main()
