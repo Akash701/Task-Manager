@@ -22,10 +22,10 @@ try {
 })
 
 
-router.get("/task",async(req,res)=>{
+router.get("/task",auth,async(req,res)=>{
 
     try {
-      const task = await Task.find({})
+      const task = await Task.find({owner: req.user._id})
       res.status(200).send(task)
     } catch (error) {
       res.status(400).send(error)
@@ -65,7 +65,7 @@ res.status(400).send(error)
 })
 
 //Update task //
-router.patch('/task/:id',async(req,res)=>{
+router.patch('/task/:id',auth,async(req,res)=>{
 const updates = Object.keys(req.body)
 const allowUpdateFor = ["description","completed"]
 const isvalidOperation = updates.every((update)=> allowUpdateFor.includes(update))
@@ -73,26 +73,33 @@ const isvalidOperation = updates.every((update)=> allowUpdateFor.includes(update
 if(!isvalidOperation){
 return res.status(401).send({error:"Invalid operation"})
 }
+
 try {
-const task = await Task.findById(req.params.id)
-updates.forEach((update)=>task[update]=req.body[update])
-await task.save()
+const task = await Task.findOne({_id:req.params.id,owner:req.user._id})
+
 
 //const task = await Task.findByIdAndUpdate(req.params.id,req.body,{new:true,runValidators:true})
 if(!task){
-return res.status(404).send('Not the task')
+return res.status(404).send('Task not found')
 }
+
+updates.forEach((update)=>task[update]=req.body[update])
+await task.save()
+
 res.status(200).send(task)
 } catch (error) {
+
 res.status(500).send(error)
 }
 })
 
 //deleteting task // 
 
-router.delete('/task/:id',async (req,res)=>{
+router.delete('/task/:id',auth,async (req,res)=>{
 try {
-const task = await Task.findByIdAndDelete(req.params.id)
+const task = await Task.findOneAndDelete({
+  _id:req.params.id,owner:req.user._id
+})
 if(!task){
 return res.status(400).send("Invalid task")
 

@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
 
-const Task = mongoose.model('Task',{
+const taskSchema= new mongoose.Schema({
     description:{
         type:String,
         trim:true,
@@ -18,16 +18,10 @@ const Task = mongoose.model('Task',{
         ref:'User'
     }
 
+},{
+    timestamps:true
 })
 
-// taskSchema.pre('save',async function(next){
-// const task = this
-// if(task.isModified('description')){
-//     task.description = await bcrypt.hash(task.password,8)
-// }
-// next()
-// })
-
-// const Task = mongoose.model('Task',taskSchema)
+const Task = mongoose.model('Task',taskSchema)
 
 module.exports = Task
